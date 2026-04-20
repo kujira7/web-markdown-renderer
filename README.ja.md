@@ -21,7 +21,7 @@ English README: [README.md](./README.md)
 
 ## インストール手順
 
-この拡張は Chrome Web Store では配布していません。Chrome の unpacked extension として読み込みます。
+ローカル開発時は Chrome の unpacked extension として読み込みます。
 
 ### 1. リポジトリをダウンロードする
 
@@ -66,7 +66,7 @@ git clone https://github.com/kujira7/web-markdown-renderer.git
 3. 次のいずれかで viewer を開く
    - Windows/Linux: `Ctrl+M`
    - macOS: `Command+M`
-   - 選択範囲を右クリックして `Read as Markdown`
+   - 選択範囲を右クリックして `Render as Markdown`
    - 拡張アイコンをクリック
 
 選択したテキストが読みやすい Markdown viewer で表示されます。
@@ -128,7 +128,15 @@ ZIP でダウンロードした場合:
 - `chrome://extensions` などの Chrome 内部ページでは動作しません
 - Chrome Web Store や一部の組み込み PDF viewer では拡張 script がブロックされます
 - この拡張は選択されたテキストだけを読みます。各サービスの API にはアクセスしません
-- reader-only のツールです。投稿・編集機能は意図的に対象外です
+- renderer-only のツールです。投稿・編集機能は意図的に対象外です
+
+## 権限
+
+- `activeTab`: ユーザーが拡張を実行した現在のタブにだけ一時的にアクセスするため
+- `contextMenus`: 選択範囲の右クリックメニューに `Render as Markdown` を追加するため
+- `scripting`: ユーザー操作後に現在のタブへ renderer script と CSS を注入するため
+
+この拡張は `<all_urls>` などの host permission を要求せず、全ページで content script を常時実行せず、選択テキストを外部サービスへ送信しません。
 
 ## 開発
 

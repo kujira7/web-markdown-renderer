@@ -1,9 +1,9 @@
-const MENU_ID = "read-selection-as-markdown";
+const MENU_ID = "render-selection-as-markdown";
 
 chrome.runtime.onInstalled.addListener(() => {
   chrome.contextMenus.create({
     id: MENU_ID,
-    title: "Read as Markdown",
+    title: "Render as Markdown",
     contexts: ["selection"]
   });
 });

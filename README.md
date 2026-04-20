@@ -21,7 +21,7 @@ Japanese README: [README.ja.md](./README.ja.md)
 
 ## Installation
 
-This extension is not distributed through the Chrome Web Store. Install it as an unpacked extension.
+For local development, install it as an unpacked extension.
 
 ### 1. Download the Repository
 
@@ -66,7 +66,7 @@ Important: select the directory that contains `manifest.json`.
 3. Open the viewer with one of these actions:
    - Press `Ctrl+M` on Windows/Linux.
    - Press `Command+M` on macOS.
-   - Right-click the selection and choose `Read as Markdown`.
+   - Right-click the selection and choose `Render as Markdown`.
    - Click the extension icon.
 
 The selected text opens in a readable Markdown viewer.
@@ -128,7 +128,15 @@ After updating:
 - Chrome internal pages such as `chrome://extensions` cannot be read by this extension.
 - Chrome Web Store pages and some built-in PDF viewers may block extension scripts.
 - The extension reads selected text only. It does not access service APIs.
-- It is a reader-only tool. Posting and editing features are intentionally out of scope.
+- It is a renderer-only tool. Posting and editing features are intentionally out of scope.
+
+## Permissions
+
+- `activeTab`: grants temporary access to the current tab only after the user invokes the extension.
+- `contextMenus`: adds the `Render as Markdown` item to the selection context menu.
+- `scripting`: injects the renderer scripts and CSS into the current tab after user action.
+
+The extension does not request host permissions such as `<all_urls>`, does not run content scripts on every page by default, and does not send selected text to external services.
 
 ## Development
 
