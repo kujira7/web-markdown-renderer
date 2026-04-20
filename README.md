@@ -6,18 +6,18 @@ Japanese README: [README.ja.md](./README.ja.md)
 
 ## What It Does
 
-- Renders selected text as GitHub Flavored Markdown.
-- Supports Mermaid diagrams in fenced `mermaid` code blocks.
-- Opens as a side panel and can expand to full-page view.
-- Restores selected HTML tables into Markdown tables before rendering.
-- Separates tightly pasted Markdown tables from adjacent paragraphs and headings.
-- Restores common one-line collapsed pipe tables back into Markdown tables.
-- Removes accidental blank lines inserted between Markdown table rows.
-- Removes accidental blank lines inserted between list items and blockquote lines.
-- Applies minimal Slack-style link normalization:
-  - `<https://example.com|label>` becomes a readable labeled link.
-  - `<https://example.com>` becomes a normal link.
-- Never posts, edits, replies, syncs, or writes back to any service.
+- Opens selected text in an on-page Markdown viewer.
+- Renders GitHub Flavored Markdown with tables, task lists, code blocks, and links.
+- Renders fenced `mermaid` code blocks as Mermaid diagrams.
+- Extracts selected HTML tables and renders them as Markdown tables.
+- Cleans up common copy-and-paste artifacts before rendering:
+  - collapsed pipe tables
+  - missing spacing around tables
+  - extra blank lines inside tables, lists, and blockquotes
+  - Slack-style links such as `<https://example.com|label>`
+- Shows the normalized source text and provides a `Copy source` action.
+- Opens as a side panel and can expand to a full-page overlay.
+- Runs locally in the browser and does not post, edit, sync, or write back to any service.
 
 ## Installation
 
