@@ -199,7 +199,7 @@
     panel.className = "umr-panel";
     panel.setAttribute("role", "dialog");
     panel.setAttribute("aria-modal", "true");
-    panel.setAttribute("aria-label", "Markdown reader");
+    panel.setAttribute("aria-label", "Markdown renderer");
     panel.tabIndex = -1;
 
     const header = document.createElement("header");
@@ -236,7 +236,7 @@
 
     const main = document.createElement("main");
     main.className = "umr-content markdown-body";
-    main.innerHTML = window.MarkdownReader.renderMarkdown(text);
+    main.innerHTML = window.MarkdownRenderer.renderMarkdown(text);
 
     const source = document.createElement("details");
     source.className = "umr-source";

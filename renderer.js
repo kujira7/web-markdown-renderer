@@ -1,13 +1,24 @@
-(function initMarkdownReader(root) {
+(function initMarkdownRenderer(root) {
   "use strict";
 
   const markedApi = root.marked || loadMarkedForNode();
 
   function renderMarkdown(source) {
-    const text = normalizeTableBoundaries(
-      normalizeSparsePipeTables(normalizeCollapsedPipeTables(normalizeSlackLinks(String(source || "").replace(/\r\n?/g, "\n"))))
-    );
-    return sanitizeHtml(parseMarkdown(text));
+    return sanitizeHtml(parseMarkdown(normalizeMarkdownForRendering(source)));
+  }
+
+  function normalizeMarkdownForRendering(source) {
+    return [
+      normalizeLineEndings,
+      normalizeSlackLinks,
+      normalizeCollapsedPipeTables,
+      normalizeSparsePipeTables,
+      normalizeTableBoundaries
+    ].reduce((text, normalize) => normalize(text), String(source || ""));
+  }
+
+  function normalizeLineEndings(text) {
+    return String(text || "").replace(/\r\n?/g, "\n");
   }
 
   function normalizeSlackLinks(text) {
@@ -357,10 +368,18 @@
     "ul"
   ]);
 
-  const api = { renderMarkdown, normalizeSlackLinks, normalizeCollapsedPipeTables, normalizeSparsePipeTables, normalizeTableBoundaries, sanitizeHtml };
+  const api = {
+    renderMarkdown,
+    normalizeMarkdownForRendering,
+    normalizeSlackLinks,
+    normalizeCollapsedPipeTables,
+    normalizeSparsePipeTables,
+    normalizeTableBoundaries,
+    sanitizeHtml
+  };
 
   if (typeof module !== "undefined" && module.exports) {
     module.exports = api;
   }
-  root.MarkdownReader = api;
+  root.MarkdownRenderer = api;
 })(typeof globalThis !== "undefined" ? globalThis : window);

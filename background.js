@@ -10,15 +10,15 @@ chrome.runtime.onInstalled.addListener(() => {
 
 chrome.contextMenus.onClicked.addListener((info, tab) => {
   if (info.menuItemId !== MENU_ID || !tab?.id) return;
-  openReader(tab.id).catch((error) => logOpenFailure(error));
+  openRenderer(tab.id).catch((error) => logOpenFailure(error));
 });
 
 chrome.action.onClicked.addListener((tab) => {
   if (!tab?.id) return;
-  openReader(tab.id).catch((error) => logOpenFailure(error));
+  openRenderer(tab.id).catch((error) => logOpenFailure(error));
 });
 
-async function openReader(tabId, text) {
+async function openRenderer(tabId, text) {
   await ensureContentScript(tabId);
   await sendTabMessage(tabId, {
     type: "MARKDOWN_RENDERER_OPEN",
