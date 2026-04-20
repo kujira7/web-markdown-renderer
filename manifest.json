@@ -25,8 +25,8 @@
   "commands": {
     "_execute_action": {
       "suggested_key": {
-        "default": "Ctrl+M",
-        "mac": "Command+M"
+        "default": "Ctrl+Shift+M",
+        "mac": "Command+Shift+M"
       },
       "description": "Render selected text as Markdown"
     }

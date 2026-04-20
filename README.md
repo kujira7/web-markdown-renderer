@@ -64,8 +64,8 @@ Important: select the directory that contains `manifest.json`.
 1. Open a web page such as Slack, GitHub, Confluence, Notion, or any page that contains Markdown-like text.
 2. Select the text you want to read.
 3. Open the viewer with one of these actions:
-   - Press `Ctrl+M` on Windows/Linux.
-   - Press `Command+M` on macOS.
+   - Press `Ctrl+Shift+M` on Windows/Linux.
+   - Press `Command+Shift+M` on macOS.
    - Right-click the selection and choose `Render as Markdown`.
    - Click the extension icon.
 
@@ -98,10 +98,18 @@ To check or set the shortcut:
 
 1. Open `chrome://extensions/shortcuts`.
 2. Find `Web Markdown Renderer`.
-3. Set `Activate the extension` to `Ctrl+M` or another available shortcut.
+3. Set `Activate the extension` to `Ctrl+Shift+M`, `Command+Shift+M`, or another available shortcut.
 4. Reload the target web page.
 
-If `Ctrl+M` cannot be assigned, Chrome is rejecting it because of a shortcut conflict. Choose another shortcut in `chrome://extensions/shortcuts`.
+If the shortcut does not work:
+
+1. Open `chrome://extensions/shortcuts`.
+2. Confirm that `Web Markdown Renderer` has an assigned shortcut.
+3. If the field is blank, set it manually.
+4. If the shortcut is already used by Chrome, the OS, or another extension, choose another shortcut.
+5. Open `chrome://extensions`, reload the extension, then reload the target web page.
+
+The shortcut only works on pages where Chrome allows extension script injection. It does not work on Chrome internal pages, Chrome Web Store pages, or pages where the browser blocks extensions.
 
 ## Updating
 
