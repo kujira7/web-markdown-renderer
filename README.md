@@ -145,6 +145,16 @@ npm install
 npm test
 ```
 
+## Chrome Web Store Package
+
+Build the ZIP file for Chrome Web Store upload:
+
+```sh
+npm run build:store
+```
+
+The package is written to `dist/` and excludes development-only files.
+
 ## License
 
 MIT

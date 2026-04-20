@@ -145,6 +145,16 @@ npm install
 npm test
 ```
 
+## Chrome Web Store 用パッケージ
+
+Chrome Web Store へアップロードする ZIP を作成します。
+
+```sh
+npm run build:store
+```
+
+ZIP は `dist/` に作成され、開発用ファイルは含めません。
+
 ## ライセンス
 
 MIT
