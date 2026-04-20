@@ -2,6 +2,7 @@
   "name": "web-markdown-renderer",
   "version": "0.3.6",
   "private": true,
+  "license": "MIT",
   "scripts": {
     "test": "node test/renderer.test.js && node test/content.test.js"
   },

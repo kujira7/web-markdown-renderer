@@ -136,3 +136,7 @@ After updating:
 npm install
 npm test
 ```
+
+## License
+
+MIT

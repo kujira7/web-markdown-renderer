@@ -136,3 +136,7 @@ ZIP でダウンロードした場合:
 npm install
 npm test
 ```
+
+## ライセンス
+
+MIT
