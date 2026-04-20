@@ -37,7 +37,8 @@
     }
 
     const restored = normalizeSourceText(fragments.join("\n"));
-    return restored || String(selection || "");
+    const nativeText = normalizeSourceText(String(selection || ""));
+    return chooseSourceText(restored, nativeText);
   }
 
   function extractRangeText(range) {
@@ -119,13 +120,174 @@
 
   function normalizeSourceText(text) {
     return normalizeMarkdownBlockSpacing(
-      String(text || "")
-      .replace(/\u00a0/g, " ")
-      .replace(/[ \t]+\n/g, "\n")
-      .replace(/\n[ \t]+/g, "\n")
+      normalizePrefixedPipeTableHeaders(
+        normalizeMermaidBlockSpacing(
+          normalizeMarkdownBlockBoundaries(
+            String(text || "")
+            .replace(/\u00a0/g, " ")
+            .replace(/[ \t]+\n/g, "\n")
+            .replace(/\n[ \t]+/g, "\n")
+          )
+        )
+      )
     )
       .replace(/\n{3,}/g, "\n\n")
       .trim();
+  }
+
+  function chooseSourceText(restored, nativeText) {
+    if (!restored) return nativeText || "";
+    if (!nativeText) return restored;
+    return shouldPreferNativeSource(restored, nativeText) ? nativeText : restored;
+  }
+
+  function shouldPreferNativeSource(restored, nativeText) {
+    const restoredLines = countLines(restored);
+    const nativeLines = countLines(nativeText);
+    if (nativeLines < restoredLines + 2) return false;
+    if (hasPipeTable(restored) && !hasPipeTable(nativeText)) return false;
+    return hasMarkdownBlockMarkers(nativeText);
+  }
+
+  function countLines(text) {
+    return String(text || "").split("\n").length;
+  }
+
+  function hasMarkdownBlockMarkers(text) {
+    return /(?:^|\n)\s*(?:#{1,6}\s+|```|~~~|\|.*\|)/.test(String(text || ""));
+  }
+
+  function hasPipeTable(text) {
+    return /(?:^|\n)\s*\|.*\|\s*(?:\n|$)/.test(String(text || ""));
+  }
+
+  function normalizeMarkdownBlockBoundaries(text) {
+    const lines = String(text || "").split("\n");
+    const output = [];
+    let inFence = false;
+    let fenceMarker = "";
+
+    for (const line of lines) {
+      const fence = line.match(/^\s*(```+|~~~+)/);
+      if (fence && !inFence) {
+        inFence = true;
+        fenceMarker = fence[1][0];
+      } else if (fence && inFence && fence[1][0] === fenceMarker) {
+        inFence = false;
+        fenceMarker = "";
+      }
+
+      output.push(inFence ? line : splitCollapsedMarkdownBlockMarkers(line));
+    }
+
+    return output.join("\n");
+  }
+
+  function splitCollapsedMarkdownBlockMarkers(line) {
+    return String(line || "")
+      .replace(/([^#\n])(?=#{2,6}\s+)/g, "$1\n\n")
+      .replace(/([^\n])(?=```|~~~)/g, "$1\n\n");
+  }
+
+  function normalizeMermaidBlockSpacing(text) {
+    const lines = String(text || "").split("\n");
+    const output = [];
+    let inMermaid = false;
+    let fenceMarker = "";
+
+    for (const line of lines) {
+      const openingFence = line.match(/^\s*(```+|~~~+)\s*mermaid\s*$/i);
+      const closingFence = line.match(/^\s*(```+|~~~+)\s*$/);
+
+      if (openingFence && !inMermaid) {
+        inMermaid = true;
+        fenceMarker = openingFence[1][0];
+        output.push(line);
+        continue;
+      }
+
+      if (closingFence && inMermaid && closingFence[1][0] === fenceMarker) {
+        inMermaid = false;
+        fenceMarker = "";
+        output.push(line);
+        continue;
+      }
+
+      output.push(inMermaid ? splitCollapsedMermaidStatements(line) : line);
+    }
+
+    return output.join("\n");
+  }
+
+  function splitCollapsedMermaidStatements(line) {
+    return String(line || "").replace(/\bend[ \t]{2,}(?=(?:subgraph\b|[A-Za-z0-9_]+\s*(?:-->|-\.->)))/g, "end\n");
+  }
+
+  function normalizePrefixedPipeTableHeaders(text) {
+    const lines = String(text || "").split("\n");
+    const output = [];
+    let inFence = false;
+    let fenceMarker = "";
+
+    for (let index = 0; index < lines.length; index += 1) {
+      const line = lines[index];
+      const fence = line.match(/^\s*(```+|~~~+)/);
+
+      if (fence && !inFence) {
+        inFence = true;
+        fenceMarker = fence[1][0];
+      } else if (fence && inFence && fence[1][0] === fenceMarker) {
+        inFence = false;
+        fenceMarker = "";
+      }
+
+      const normalized = inFence ? null : splitPrefixedPipeTableHeader(line, lines[index + 1]);
+      if (normalized) {
+        output.push(normalized.prefix, "", normalized.header);
+      } else {
+        output.push(line);
+      }
+    }
+
+    return output.join("\n");
+  }
+
+  function splitPrefixedPipeTableHeader(line, nextLine) {
+    if (!isTableSeparator(nextLine)) return null;
+
+    const columnCount = splitTableCells(nextLine).length;
+    const headerStart = findTableRowStart(line, columnCount);
+    if (headerStart <= 0) return null;
+
+    const prefix = line.slice(0, headerStart).trimEnd();
+    const header = line.slice(headerStart).trim();
+    if (!prefix || splitTableCells(header).length !== columnCount) return null;
+
+    return { prefix, header };
+  }
+
+  function isTableSeparator(line) {
+    return typeof line === "string" && /^\s*\|?\s*:?-{3,}:?\s*(\|\s*:?-{3,}:?\s*)+\|?\s*$/.test(line);
+  }
+
+  function splitTableCells(line) {
+    return String(line || "")
+      .trim()
+      .replace(/^\|/, "")
+      .replace(/\|$/, "")
+      .split("|")
+      .map((cell) => cell.trim());
+  }
+
+  function findTableRowStart(text, columnCount) {
+    const pipeIndexes = [];
+    for (let index = 0; index < text.length; index += 1) {
+      if (text[index] === "|" && text[index - 1] !== "\\") pipeIndexes.push(index);
+    }
+
+    const requiredPipes = columnCount + 1;
+    if (pipeIndexes.length < requiredPipes) return -1;
+    return pipeIndexes[pipeIndexes.length - requiredPipes];
   }
 
   function normalizeMarkdownBlockSpacing(text) {
@@ -319,7 +481,7 @@
     }
   }
 
-  const api = { normalizeMarkdownBlockSpacing, normalizeSourceText };
+  const api = { chooseSourceText, normalizeMarkdownBlockSpacing, normalizeSourceText };
 
   if (typeof module !== "undefined" && module.exports) {
     module.exports = api;

@@ -1,5 +1,5 @@
 const assert = require("node:assert/strict");
-const { normalizeMarkdownBlockSpacing, normalizeSourceText } = require("../content");
+const { chooseSourceText, normalizeMarkdownBlockSpacing, normalizeSourceText } = require("../content");
 
 const source = normalizeSourceText(`### B. パイプライン同時実行テスト
 
@@ -28,6 +28,65 @@ two`);
 assert.equal(paragraphs, `one
 
 two`);
+
+const prefixedTable = normalizeSourceText(`## タイムテーブル・参加者| 時間 | チーム/領域 | Product参加者 | Tech参加者 |
+|------|------------|--------------|-----------|
+| 11:00–11:40 | Drawer | Yushiro Kato, Yosuke Shirai | Atsushi Kambara, Sho Abe, Yota Shoji, Michiaki Sakurai, Kyohei Yamaki |`);
+assert.equal(
+  prefixedTable,
+  `## タイムテーブル・参加者
+
+| 時間 | チーム/領域 | Product参加者 | Tech参加者 |
+|------|------------|--------------|-----------|
+| 11:00–11:40 | Drawer | Yushiro Kato, Yosuke Shirai | Atsushi Kambara, Sho Abe, Yota Shoji, Michiaki Sakurai, Kyohei Yamaki |`
+);
+
+const collapsedBlocks = normalizeSourceText(`# 新規環境の OIDC Bootstrap 手順## 1. 概要新規環境 (stg, prod 等) を databricks-infra-asset の CI/CD に追加する手順。### 認証フロー\`\`\`mermaid
+flowchart LR
+subgraph GitHub["GitHub Actions"]
+JWT["OIDC JWT"]
+end    subgraph Databricks["Databricks Account"]
+CI_FP["ci-policy<br/>(subject_claim: repository)"]
+CD_FP["dab-cd-policy<br/>(subject_claim: sub)"]
+WsAPI["Workspace API"]
+end    JWT -->|"CI (validate / plan)"| CI_FP
+JWT -->|"CD (deploy) + environment"| CD_FP
+CI_FP -.->|認証| WsAPI
+CD_FP -.->|認証| WsAPI
+WsAPI -.->|bundle| DAB["DAB Resources"]
+\`\`\``);
+assert.match(collapsedBlocks, /^# 新規環境の OIDC Bootstrap 手順\n\n## 1\. 概要/);
+assert.match(collapsedBlocks, /手順。\n\n### 認証フロー\n\n```mermaid/);
+assert.match(collapsedBlocks, /end\nsubgraph Databricks/);
+assert.match(collapsedBlocks, /end\nJWT -->/);
+
+const nativeMarkdown = normalizeSourceText(`# 新規環境の OIDC Bootstrap 手順
+
+## 1. 概要
+
+新規環境 (stg, prod 等) を databricks-infra-asset の CI/CD に追加する手順。
+
+### 認証フロー
+
+\`\`\`mermaid
+flowchart LR
+subgraph GitHub["GitHub Actions"]
+JWT["OIDC JWT"]
+end
+
+subgraph Databricks["Databricks Account"]
+CI_FP["ci-policy<br/>(subject_claim: repository)"]
+CD_FP["dab-cd-policy<br/>(subject_claim: sub)"]
+WsAPI["Workspace API"]
+end
+
+JWT -->|"CI (validate / plan)"| CI_FP
+JWT -->|"CD (deploy) + environment"| CD_FP
+CI_FP -.->|認証| WsAPI
+CD_FP -.->|認証| WsAPI
+WsAPI -.->|bundle| DAB["DAB Resources"]
+\`\`\``);
+assert.equal(chooseSourceText(collapsedBlocks, nativeMarkdown), nativeMarkdown);
 
 const fenced = normalizeMarkdownBlockSpacing(`before
 
