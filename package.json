@@ -1,0 +1,12 @@
+{
+  "name": "web-markdown-renderer",
+  "version": "0.3.6",
+  "private": true,
+  "scripts": {
+    "test": "node test/renderer.test.js && node test/content.test.js"
+  },
+  "dependencies": {
+    "marked": "^18.0.2",
+    "mermaid": "^11.14.0"
+  }
+}
