@@ -124,4 +124,38 @@ after
 done`
 );
 
+const frontMatter = renderMarkdown(`---
+name: caddi-dab-pipeline-creator
+description: DAB (Databricks Asset Bundles) に新しい DLT パイプラインを追加するワークフロー。
+user-invocable: true
+---
+
+# Title`);
+assert.match(frontMatter, /<table>/);
+assert.match(frontMatter, /<th>name<\/th>\s*<td>caddi-dab-pipeline-creator<\/td>/);
+assert.match(frontMatter, /<th>description<\/th>\s*<td>DAB \(Databricks Asset Bundles\) に新しい DLT パイプラインを追加するワークフロー。<\/td>/);
+assert.match(frontMatter, /<th>user-invocable<\/th>\s*<td>true<\/td>/);
+assert.match(frontMatter, /<\/table>\s*<h1>Title<\/h1>/);
+
+const foldedFrontMatter = renderMarkdown(`---
+name: example
+description: >
+  first line
+  second line
+tags:
+  - alpha
+  - beta
+---
+body`);
+assert.match(foldedFrontMatter, /<th>description<\/th>\s*<td>first line second line<\/td>/);
+assert.match(foldedFrontMatter, /<th>tags<\/th>\s*<td>alpha<br>\s*beta<\/td>/);
+
+const invalidFrontMatter = renderMarkdown(`---
+name:
+  nested: value
+---
+body`);
+assert.doesNotMatch(invalidFrontMatter, /<table>\s*<tbody>\s*<tr><th>name<\/th>/);
+assert.match(invalidFrontMatter, /<hr/);
+
 console.log("renderer tests passed");

@@ -10,6 +10,7 @@
   function normalizeMarkdownForRendering(source) {
     return [
       normalizeLineEndings,
+      normalizeLeadingYamlFrontMatter,
       normalizeSlackLinks,
       normalizeCollapsedPipeTables,
       normalizeSparsePipeTables,
@@ -19,6 +20,177 @@
 
   function normalizeLineEndings(text) {
     return String(text || "").replace(/\r\n?/g, "\n");
+  }
+
+  function normalizeLeadingYamlFrontMatter(text) {
+    const extracted = extractLeadingYamlFrontMatter(text);
+    if (!extracted) return text;
+
+    const entries = parseSimpleYamlFrontMatter(extracted.frontMatter);
+    if (!entries || entries.length === 0) return text;
+
+    const table = renderFrontMatterTable(entries);
+    if (!table) return text;
+
+    const body = extracted.body.trimStart();
+    return body ? `${table}\n\n${body}` : table;
+  }
+
+  function extractLeadingYamlFrontMatter(text) {
+    const source = String(text || "");
+    if (!source.startsWith("---\n")) return null;
+
+    const lines = source.split("\n");
+    for (let index = 1; index < lines.length; index += 1) {
+      if (/^(---|\.\.\.)\s*$/.test(lines[index])) {
+        return {
+          frontMatter: lines.slice(1, index).join("\n"),
+          body: lines.slice(index + 1).join("\n")
+        };
+      }
+    }
+
+    return null;
+  }
+
+  function parseSimpleYamlFrontMatter(text) {
+    const lines = String(text || "").split("\n");
+    const entries = [];
+
+    for (let index = 0; index < lines.length; ) {
+      const line = lines[index];
+      if (line.trim() === "" || /^\s*#/.test(line)) {
+        index += 1;
+        continue;
+      }
+
+      if (/^\s/.test(line)) return null;
+
+      const match = line.match(/^([A-Za-z0-9_-]+):(.*)$/);
+      if (!match) return null;
+
+      const key = match[1];
+      const rest = match[2];
+      const parsed = parseYamlValue(rest, lines, index + 1);
+      if (!parsed) return null;
+
+      entries.push({ key, value: parsed.value });
+      index = parsed.nextIndex;
+    }
+
+    return entries;
+  }
+
+  function parseYamlValue(rest, lines, startIndex) {
+    const trimmed = rest.trim();
+
+    if (trimmed === "") {
+      const block = collectIndentedBlock(lines, startIndex);
+      if (!block) return { value: "", nextIndex: startIndex };
+      const arrayValue = parseYamlArrayBlock(block.lines);
+      if (!arrayValue) return null;
+      return { value: arrayValue, nextIndex: block.nextIndex };
+    }
+
+    if (/^[>|][+-]?\d*$/.test(trimmed)) {
+      const block = collectIndentedBlock(lines, startIndex);
+      if (!block) return null;
+      return {
+        value: trimmed[0] === ">" ? foldYamlBlock(block.lines) : joinYamlBlock(block.lines),
+        nextIndex: block.nextIndex
+      };
+    }
+
+    if (/^[\[{]/.test(trimmed)) return null;
+
+    return { value: normalizeScalarValue(trimmed), nextIndex: startIndex };
+  }
+
+  function collectIndentedBlock(lines, startIndex) {
+    let baseIndent = null;
+    let nextIndex = startIndex;
+    const blockLines = [];
+
+    for (; nextIndex < lines.length; nextIndex += 1) {
+      const line = lines[nextIndex];
+      if (line.trim() === "") {
+        if (baseIndent === null) continue;
+        blockLines.push("");
+        continue;
+      }
+
+      const indent = line.match(/^\s*/)[0].length;
+      if (baseIndent === null) {
+        if (indent === 0) break;
+        baseIndent = indent;
+      }
+
+      if (indent < baseIndent) break;
+      blockLines.push(line.slice(baseIndent));
+    }
+
+    if (baseIndent === null) return null;
+    return { lines: blockLines, nextIndex };
+  }
+
+  function parseYamlArrayBlock(lines) {
+    const values = [];
+
+    for (const line of lines) {
+      if (line === "") continue;
+      const match = line.match(/^- (.*)$/);
+      if (!match) return null;
+      const value = match[1].trim();
+      if (value === "" || /^[\[{]/.test(value)) return null;
+      values.push(normalizeScalarValue(value));
+    }
+
+    return values.join("<br>");
+  }
+
+  function foldYamlBlock(lines) {
+    const paragraphs = [];
+    let current = [];
+
+    for (const line of lines) {
+      if (line === "") {
+        if (current.length > 0) {
+          paragraphs.push(current.join(" "));
+          current = [];
+        } else if (paragraphs.length > 0) {
+          paragraphs.push("");
+        }
+        continue;
+      }
+
+      current.push(line.trim());
+    }
+
+    if (current.length > 0) paragraphs.push(current.join(" "));
+    return paragraphs.join("<br><br>");
+  }
+
+  function joinYamlBlock(lines) {
+    return lines.join("<br>");
+  }
+
+  function normalizeScalarValue(value) {
+    const trimmed = String(value || "").trim();
+    const quoted = trimmed.match(/^(['"])([\s\S]*)\1$/);
+    return quoted ? quoted[2] : trimmed;
+  }
+
+  function renderFrontMatterTable(entries) {
+    const rows = entries.map(({ key, value }) => {
+      const normalizedValue = String(value || "");
+      return `<tr><th>${escapeHtml(key)}</th><td>${renderFrontMatterValue(normalizedValue)}</td></tr>`;
+    });
+
+    return rows.length > 0 ? `<table>\n<tbody>\n${rows.join("\n")}\n</tbody>\n</table>` : "";
+  }
+
+  function renderFrontMatterValue(value) {
+    return escapeHtml(value).replace(/&lt;br&gt;/g, "<br>");
   }
 
   function normalizeSlackLinks(text) {
