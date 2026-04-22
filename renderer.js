@@ -220,9 +220,13 @@
   }
 
   function normalizeSlackLinks(text) {
-    return text
-      .replace(/<((?:https?:\/\/|mailto:)[^>|]+)\|([^>]+)>/g, "[$2]($1)")
-      .replace(/<((?:https?:\/\/|mailto:)[^>]+)>/g, "$1");
+    return mapMarkdownLinesOutsideFences(text, (line) =>
+      replaceOutsideInlineCode(line, (segment) =>
+        segment
+          .replace(/<((?:https?:\/\/|mailto:)[^>|]+)\|([^>]+)>/g, "[$2]($1)")
+          .replace(/<((?:https?:\/\/|mailto:)[^>]+)>/g, "$1")
+      )
+    );
   }
 
   function normalizeTableBoundaries(text) {
@@ -258,25 +262,9 @@
   }
 
   function normalizeCollapsedPipeTables(text) {
-    const lines = String(text || "").split("\n");
-    const output = [];
-    let inFence = false;
-    let fenceMarker = "";
-
-    for (const line of lines) {
-      const fence = line.match(/^\s*(```+|~~~+)/);
-      if (fence && !inFence) {
-        inFence = true;
-        fenceMarker = fence[1][0];
-      } else if (fence && inFence && fence[1][0] === fenceMarker) {
-        inFence = false;
-        fenceMarker = "";
-      }
-
-      output.push(inFence ? line : restoreCollapsedTableLine(line));
-    }
-
-    return output.join("\n");
+    return mapMarkdownLinesOutsideFences(text, (line) =>
+      replaceOutsideInlineCode(line, restoreCollapsedTableLine)
+    );
   }
 
   function normalizeSparsePipeTables(text) {
@@ -428,6 +416,69 @@
 
   function isTableSeparator(line) {
     return typeof line === "string" && /^\s*\|?\s*:?-{3,}:?\s*(\|\s*:?-{3,}:?\s*)+\|?\s*$/.test(line);
+  }
+
+  function mapMarkdownLinesOutsideFences(text, transformLine) {
+    const lines = String(text || "").split("\n");
+    const output = [];
+    let inFence = false;
+    let fenceMarker = "";
+
+    for (const line of lines) {
+      const fence = line.match(/^\s*(```+|~~~+)/);
+      if (fence && !inFence) {
+        inFence = true;
+        fenceMarker = fence[1][0];
+        output.push(line);
+        continue;
+      }
+
+      if (fence && inFence && fence[1][0] === fenceMarker) {
+        inFence = false;
+        fenceMarker = "";
+        output.push(line);
+        continue;
+      }
+
+      output.push(inFence ? line : transformLine(line));
+    }
+
+    return output.join("\n");
+  }
+
+  function replaceOutsideInlineCode(line, transformSegment) {
+    const source = String(line || "");
+    let output = "";
+    let cursor = 0;
+
+    while (cursor < source.length) {
+      const codeStart = source.indexOf("`", cursor);
+      if (codeStart < 0) {
+        output += transformSegment(source.slice(cursor));
+        break;
+      }
+
+      output += transformSegment(source.slice(cursor, codeStart));
+
+      const markerLength = countRepeatedCharacter(source, codeStart, "`");
+      const closingIndex = source.indexOf("`".repeat(markerLength), codeStart + markerLength);
+
+      if (closingIndex < 0) {
+        output += source.slice(codeStart);
+        break;
+      }
+
+      output += source.slice(codeStart, closingIndex + markerLength);
+      cursor = closingIndex + markerLength;
+    }
+
+    return output;
+  }
+
+  function countRepeatedCharacter(text, index, character) {
+    let count = 0;
+    while (text[index + count] === character) count += 1;
+    return count;
   }
 
   function parseMarkdown(text) {

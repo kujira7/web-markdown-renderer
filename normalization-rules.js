@@ -5,7 +5,7 @@
     {
       id: "source-normalize-whitespace",
       phase: "source-normalization",
-      description: "Normalize non-breaking spaces and strip trailing and line-leading indentation from selected text.",
+      description: "Normalize non-breaking spaces and strip trailing spaces from selected text without changing leading indentation.",
       handler: "normalizeSourceWhitespace"
     },
     {
@@ -27,15 +27,9 @@
       handler: "normalizePrefixedPipeTableHeaders"
     },
     {
-      id: "source-trim-compact-list-and-quote-spacing",
-      phase: "source-normalization",
-      description: "Remove extra blank lines that appear inside compact lists and blockquotes.",
-      handler: "normalizeMarkdownBlockSpacing"
-    },
-    {
       id: "source-collapse-excess-blank-lines",
       phase: "source-normalization",
-      description: "Collapse runs of blank lines and trim the final normalized source text.",
+      description: "Collapse runs of blank lines and drop leading and trailing blank lines from the final normalized source text.",
       handler: "finalizeSourceText"
     }
   ];
@@ -56,13 +50,13 @@
     {
       id: "render-normalize-slack-links",
       phase: "render-normalization",
-      description: "Convert Slack-style angle-bracket links into standard Markdown links.",
+      description: "Convert Slack-style angle-bracket links into standard Markdown links outside fenced and inline code.",
       handler: "normalizeSlackLinks"
     },
     {
       id: "render-expand-collapsed-pipe-tables",
       phase: "render-normalization",
-      description: "Restore common single-line collapsed pipe tables into multiline Markdown tables.",
+      description: "Restore common single-line collapsed pipe tables into multiline Markdown tables outside fenced and inline code.",
       handler: "normalizeCollapsedPipeTables"
     },
     {
