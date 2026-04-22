@@ -13,7 +13,7 @@ Japanese README: [README.ja.md](./README.ja.md)
 - Cleans up common copy-and-paste artifacts before rendering:
   - collapsed pipe tables
   - missing spacing around tables
-  - extra blank lines inside tables, lists, and blockquotes
+  - extra blank lines inside tables
   - Slack-style links such as `<https://example.com|label>`
 - Restores selected HTML `<hr>` elements as Markdown thematic breaks (`---`)
 - Shows the normalized source text and provides a `Copy source` action.
@@ -30,12 +30,11 @@ Code is the source of truth for the rule registry. The current rules are grouped
 
 | ID | Purpose | Main Risk |
 | --- | --- | --- |
-| `source-normalize-whitespace` | Normalize copied whitespace artifacts before block-level transforms. | Leading indentation that carries meaning can be removed. |
+| `source-normalize-whitespace` | Normalize copied non-breaking spaces and trailing spaces before block-level transforms. | No material user-visible risk expected. |
 | `source-split-collapsed-markdown-blocks` | Split collapsed headings and fenced code markers onto separate lines. | Non-Markdown text that resembles headings can be split. |
 | `source-expand-collapsed-mermaid-lines` | Split collapsed Mermaid `end` statements inside fenced Mermaid blocks. | Mermaid text that intentionally keeps spacing on one line can be rewritten. |
 | `source-separate-prefixed-table-headers` | Separate prose prefixes from pipe-table header rows. | Prose containing many pipes can be mistaken for a table header. |
-| `source-trim-compact-list-and-quote-spacing` | Remove extra blank lines inside compact lists and blockquotes. | Intentional spacing inside lists or blockquotes can be compacted. |
-| `source-collapse-excess-blank-lines` | Collapse repeated blank lines and trim the final normalized source. | Significant leading or trailing blank lines are dropped. |
+| `source-collapse-excess-blank-lines` | Collapse repeated blank lines and drop leading or trailing blank lines from the final normalized source. | Significant leading or trailing blank lines are dropped. |
 
 ### Render Normalization
 
@@ -43,8 +42,8 @@ Code is the source of truth for the rule registry. The current rules are grouped
 | --- | --- | --- |
 | `render-normalize-line-endings` | Normalize line endings before rendering transforms. | No material user-visible risk expected. |
 | `render-convert-yaml-front-matter` | Convert supported leading YAML front matter into a metadata table. | Unsupported or ambiguous front matter stays as Markdown text. |
-| `render-normalize-slack-links` | Convert Slack-style angle-bracket links into standard Markdown links. | Angle-bracket text that looks like a Slack link can be rewritten. |
-| `render-expand-collapsed-pipe-tables` | Restore common one-line collapsed pipe tables. | Pipe-heavy prose can be mistaken for a table. |
+| `render-normalize-slack-links` | Convert Slack-style angle-bracket links into standard Markdown links outside fenced and inline code. | Angle-bracket text that looks like a Slack link can be rewritten. |
+| `render-expand-collapsed-pipe-tables` | Restore common one-line collapsed pipe tables outside fenced and inline code. | Pipe-heavy prose can be mistaken for a table. |
 | `render-trim-sparse-table-spacing` | Remove blank lines between Markdown table rows. | Intentional spacing around table-like text can be collapsed. |
 | `render-separate-table-boundaries` | Insert blank lines around Markdown tables for stable GFM parsing. | Table-looking text can be separated into its own block. |
 

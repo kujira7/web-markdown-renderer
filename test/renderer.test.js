@@ -20,6 +20,12 @@ assert.deepEqual(listNormalizationRules("render-normalization").map((rule) => ru
 const slackLink = normalizeSlackLinks("See <https://example.com/docs|docs> and <https://example.com>");
 assert.equal(slackLink, "See [docs](https://example.com/docs) and https://example.com");
 
+const slackLinkInlineCode = normalizeSlackLinks("Use `<https://example.com/docs|docs>` literally.");
+assert.equal(slackLinkInlineCode, "Use `<https://example.com/docs|docs>` literally.");
+
+const slackLinkFence = normalizeSlackLinks("```\n<https://example.com/docs|docs>\n```");
+assert.equal(slackLinkFence, "```\n<https://example.com/docs|docs>\n```");
+
 const rendered = renderMarkdown(`# Title
 
 See <https://example.com/docs|docs>.
@@ -99,6 +105,11 @@ const collapsedText = normalizeCollapsedPipeTables(
   "before | A | B | | --- | --- | | a | b | after"
 );
 assert.equal(collapsedText, "before\n| A | B |\n| --- | --- |\n| a | b |\nafter");
+
+const collapsedInlineCode = normalizeCollapsedPipeTables(
+  "`before | A | B | | --- | --- | | a | b | after`"
+);
+assert.equal(collapsedInlineCode, "`before | A | B | | --- | --- | | a | b | after`");
 
 const sparseTable = renderMarkdown(`| テスト                      | 目的          | 方法                                                          |
 
