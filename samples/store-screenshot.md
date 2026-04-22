@@ -1,3 +1,8 @@
+---
+name: web-markdown-renderer
+description: Use Web Markdown Renderer to read selected Markdown directly in the current tab.
+---
+
 # Release Review
 
 Use Web Markdown Renderer to read selected Markdown directly in the current tab.
