@@ -17,6 +17,7 @@ English README: [README.md](./README.md)
 - Slack 風リンクを最小限だけ読みやすく正規化する
   - `<https://example.com|label>` を label 付きリンクとして表示
   - `<https://example.com>` を通常リンクとして表示
+- 選択範囲に HTML の `<hr>` が含まれる場合、Markdown の thematic break (`---`) として復元する
 - 投稿、編集、返信、同期、外部サービスへの書き込みはしない
 
 ## 正規化ルール
@@ -163,6 +164,7 @@ ZIP でダウンロードした場合:
 
 - `chrome://extensions` などの Chrome 内部ページでは動作しません
 - Chrome Web Store や一部の組み込み PDF viewer では拡張 script がブロックされます
+- 本文の `text` 直下にある `---` は GitHub/CommonMark と同様に setext 見出しとして解釈される場合があります
 - この拡張は選択されたテキストだけを読みます。各サービスの API にはアクセスしません
 - renderer-only のツールです。投稿・編集機能は意図的に対象外です
 

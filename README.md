@@ -15,6 +15,7 @@ Japanese README: [README.ja.md](./README.ja.md)
   - missing spacing around tables
   - extra blank lines inside tables, lists, and blockquotes
   - Slack-style links such as `<https://example.com|label>`
+- Restores selected HTML `<hr>` elements as Markdown thematic breaks (`---`)
 - Shows the normalized source text and provides a `Copy source` action.
 - Opens as a side panel and can expand to a full-page overlay.
 - Runs locally in the browser and does not post, edit, sync, or write back to any service.
@@ -163,6 +164,7 @@ After updating:
 
 - Chrome internal pages such as `chrome://extensions` cannot be read by this extension.
 - Chrome Web Store pages and some built-in PDF viewers may block extension scripts.
+- A `---` line directly under body text can still be interpreted as a setext heading, matching GitHub/CommonMark behavior.
 - The extension reads selected text only. It does not access service APIs.
 - It is a renderer-only tool. Posting and editing features are intentionally out of scope.
 

@@ -1,5 +1,33 @@
 const assert = require("node:assert/strict");
-const { chooseSourceText, listNormalizationRules, normalizeMarkdownBlockSpacing, normalizeSourceText } = require("../content");
+const { chooseSourceText, listNormalizationRules, normalizeMarkdownBlockSpacing, normalizeSourceText, textFromNode } = require("../content");
+
+const ELEMENT_NODE = 1;
+const TEXT_NODE = 3;
+
+function text(value) {
+  return {
+    nodeType: TEXT_NODE,
+    nodeValue: value
+  };
+}
+
+function element(tagName, children = []) {
+  return {
+    nodeType: ELEMENT_NODE,
+    tagName,
+    childNodes: children,
+    textContent: flattenText(children)
+  };
+}
+
+function flattenText(nodes) {
+  return nodes
+    .map((node) => {
+      if (node.nodeType === TEXT_NODE) return node.nodeValue || "";
+      return node.textContent || "";
+    })
+    .join("");
+}
 
 assert.deepEqual(listNormalizationRules("source-normalization").map((rule) => rule.id), [
   "source-normalize-whitespace",
@@ -124,5 +152,21 @@ assert.equal(
 
 after`
 );
+
+const extractedWithHorizontalRule = normalizeSourceText(
+  textFromNode(
+    element("div", [
+      element("p", [text("aaa")]),
+      element("hr"),
+      element("p", [text("bbb")])
+    ])
+  )
+);
+assert.equal(extractedWithHorizontalRule, `aaa
+
+---
+
+bbb`);
+assert.doesNotMatch(extractedWithHorizontalRule, /aaa-+bbb/);
 
 console.log("content tests passed");

@@ -1,6 +1,10 @@
 (function initMarkdownRendererContent(root) {
   "use strict";
 
+  const ELEMENT_NODE = typeof Node !== "undefined" ? Node.ELEMENT_NODE : 1;
+  const TEXT_NODE = typeof Node !== "undefined" ? Node.TEXT_NODE : 3;
+  const DOCUMENT_FRAGMENT_NODE = typeof Node !== "undefined" ? Node.DOCUMENT_FRAGMENT_NODE : 11;
+
   if (typeof module === "undefined" || !module.exports) {
     if (window.__webMarkdownRendererContentLoaded) return;
     window.__webMarkdownRendererContentLoaded = true;
@@ -50,12 +54,13 @@
   }
 
   function textFromNode(node) {
-    if (node.nodeType === Node.TEXT_NODE) return node.nodeValue || "";
-    if (node.nodeType !== Node.ELEMENT_NODE && node.nodeType !== Node.DOCUMENT_FRAGMENT_NODE) return "";
+    if (node.nodeType === TEXT_NODE) return node.nodeValue || "";
+    if (node.nodeType !== ELEMENT_NODE && node.nodeType !== DOCUMENT_FRAGMENT_NODE) return "";
 
-    if (node.nodeType === Node.ELEMENT_NODE) {
+    if (node.nodeType === ELEMENT_NODE) {
       const tag = node.tagName.toLowerCase();
       if (tag === "br") return "\n";
+      if (tag === "hr") return "\n\n---\n\n";
       if (tag === "table") return `\n${tableToMarkdown(node)}\n`;
       if (tag === "li") return `- ${childrenText(node)}\n`;
       if (tag === "pre") return `\n${node.textContent || ""}\n`;
@@ -503,7 +508,8 @@
     chooseSourceText,
     listNormalizationRules: normalizationRules.listNormalizationRules,
     normalizeMarkdownBlockSpacing,
-    normalizeSourceText
+    normalizeSourceText,
+    textFromNode
   };
 
   if (typeof module !== "undefined" && module.exports) {

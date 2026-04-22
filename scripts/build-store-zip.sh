@@ -14,6 +14,7 @@ zip -r "$ZIP_PATH" \
   manifest.json \
   background.js \
   content.js \
+  normalization-rules.js \
   renderer.js \
   viewer.css \
   icons \

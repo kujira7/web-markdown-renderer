@@ -59,6 +59,21 @@ assert.match(rendered, /<strong>x<\/strong>/);
 assert.match(rendered, /<div class="mermaid" data-source="/);
 assert.match(rendered, /A&lt;br\/&gt;label/);
 
+const thematicBreak = renderMarkdown(`aaa
+
+---
+
+bbb`);
+assert.match(thematicBreak, /<p>aaa<\/p>\s*<hr>\s*<p>bbb<\/p>/);
+
+const setextHeading = renderMarkdown(`bbb
+---`);
+assert.match(setextHeading, /<h2>bbb<\/h2>/);
+
+const setextHeadingLevelOne = renderMarkdown(`bbb
+===`);
+assert.match(setextHeadingLevelOne, /<h1>bbb<\/h1>/);
+
 const unsafe = renderMarkdown("[bad](javascript:alert(1)) <script>alert(1)</script>");
 assert.match(unsafe, /href="#"/);
 assert.doesNotMatch(unsafe, /<script>/);
@@ -191,5 +206,26 @@ name:
 body`);
 assert.doesNotMatch(invalidFrontMatter, /<table>\s*<tbody>\s*<tr><th>name<\/th>/);
 assert.match(invalidFrontMatter, /<hr/);
+
+const frontMatterWithBreak = renderMarkdown(`---
+name: web-markdown-renderer
+description: demo
+---
+
+aaa
+
+---
+
+bbb`);
+assert.match(frontMatterWithBreak, /<\/table>\s*<p>aaa<\/p>\s*<hr>\s*<p>bbb<\/p>/);
+
+const frontMatterWithSetextBody = renderMarkdown(`---
+name: web-markdown-renderer
+description: demo
+---
+
+bbb
+---`);
+assert.match(frontMatterWithSetextBody, /<\/table>\s*<h2>bbb<\/h2>/);
 
 console.log("renderer tests passed");

@@ -1,11 +1,11 @@
 {
   "name": "web-markdown-renderer",
-  "version": "1.0",
+  "version": "1.0.3",
   "private": true,
   "license": "MIT",
   "scripts": {
     "build:store": "bash scripts/build-store-zip.sh",
-    "test": "node test/normalization-rules.test.js && node test/renderer.test.js && node test/content.test.js"
+    "test": "node test/normalization-rules.test.js && node test/renderer.test.js && node test/content.test.js && npm run build:store && node test/store-package.test.js"
   },
   "dependencies": {
     "marked": "^18.0.2",
