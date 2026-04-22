@@ -2,20 +2,22 @@
   "use strict";
 
   const markedApi = root.marked || loadMarkedForNode();
+  const normalizationRules = root.MarkdownNormalizationRules || loadNormalizationRulesForNode();
+  const renderNormalizationRules = normalizationRules?.RENDER_NORMALIZATION_RULES || [];
 
   function renderMarkdown(source) {
     return sanitizeHtml(parseMarkdown(normalizeMarkdownForRendering(source)));
   }
 
   function normalizeMarkdownForRendering(source) {
-    return [
+    return normalizationRules.applyNormalizationRules(String(source || ""), renderNormalizationRules, {
       normalizeLineEndings,
       normalizeLeadingYamlFrontMatter,
       normalizeSlackLinks,
       normalizeCollapsedPipeTables,
       normalizeSparsePipeTables,
       normalizeTableBoundaries
-    ].reduce((text, normalize) => normalize(text), String(source || ""));
+    });
   }
 
   function normalizeLineEndings(text) {
@@ -493,6 +495,15 @@
     }
   }
 
+  function loadNormalizationRulesForNode() {
+    if (typeof require !== "function") return null;
+    try {
+      return require("./normalization-rules");
+    } catch (_error) {
+      return null;
+    }
+  }
+
   function isSafeUrl(url) {
     return /^(https?:\/\/|mailto:|#)/i.test(String(url || "").trim());
   }
@@ -543,6 +554,7 @@
   const api = {
     renderMarkdown,
     normalizeMarkdownForRendering,
+    listNormalizationRules: normalizationRules.listNormalizationRules,
     normalizeSlackLinks,
     normalizeCollapsedPipeTables,
     normalizeSparsePipeTables,

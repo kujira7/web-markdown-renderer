@@ -1,5 +1,14 @@
 const assert = require("node:assert/strict");
-const { chooseSourceText, normalizeMarkdownBlockSpacing, normalizeSourceText } = require("../content");
+const { chooseSourceText, listNormalizationRules, normalizeMarkdownBlockSpacing, normalizeSourceText } = require("../content");
+
+assert.deepEqual(listNormalizationRules("source-normalization").map((rule) => rule.id), [
+  "source-normalize-whitespace",
+  "source-split-collapsed-markdown-blocks",
+  "source-expand-collapsed-mermaid-lines",
+  "source-separate-prefixed-table-headers",
+  "source-trim-compact-list-and-quote-spacing",
+  "source-collapse-excess-blank-lines"
+]);
 
 const source = normalizeSourceText(`### B. パイプライン同時実行テスト
 

@@ -33,7 +33,7 @@ async function ensureContentScript(tabId) {
   }
 
   await insertCss(tabId, ["viewer.css"]);
-  await executeScript(tabId, ["vendor/marked.umd.js", "vendor/mermaid.min.js", "renderer.js", "content.js"]);
+  await executeScript(tabId, ["normalization-rules.js", "vendor/marked.umd.js", "vendor/mermaid.min.js", "renderer.js", "content.js"]);
 }
 
 function sendTabMessage(tabId, message) {

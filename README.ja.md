@@ -19,6 +19,34 @@ English README: [README.md](./README.md)
   - `<https://example.com>` を通常リンクとして表示
 - 投稿、編集、返信、同期、外部サービスへの書き込みはしない
 
+## 正規化ルール
+
+この拡張は厳密な Markdown parser ではなく、描画前にヒューリスティックな正規化ルールを適用します。
+
+ルール定義の正本はコードです。現在のルールは適用フェーズごとに次のとおりです。
+
+### Source Normalization
+
+| ID | 目的 | 主なリスク |
+| --- | --- | --- |
+| `source-normalize-whitespace` | コピー由来の空白崩れを後続変換の前に正規化する | 意味のある行頭インデントを落とす可能性がある |
+| `source-split-collapsed-markdown-blocks` | 潰れた見出しや fenced code marker を別行へ分離する | 見出し風の非 Markdown テキストを分割する可能性がある |
+| `source-expand-collapsed-mermaid-lines` | fenced Mermaid 内で潰れた `end` 文を分離する | 1 行維持を意図した Mermaid テキストを書き換える可能性がある |
+| `source-separate-prefixed-table-headers` | pipe table header に密着した前置きテキストを分離する | pipe を多く含む通常文を table header と誤認する可能性がある |
+| `source-trim-compact-list-and-quote-spacing` | compact list と blockquote 内の余分な空行を除去する | 意図した空行を詰める可能性がある |
+| `source-collapse-excess-blank-lines` | 連続空行を潰し末尾を trim する | 先頭末尾の空行が失われる |
+
+### Render Normalization
+
+| ID | 目的 | 主なリスク |
+| --- | --- | --- |
+| `render-normalize-line-endings` | 描画前に改行コードを LF に統一する | 実質的なユーザー影響は想定しない |
+| `render-convert-yaml-front-matter` | 対応可能な先頭 YAML front matter をメタデータ表へ変換する | 非対応や曖昧な front matter はそのまま本文表示になる |
+| `render-normalize-slack-links` | Slack 風 angle bracket link を標準 Markdown link に変換する | Slack 風に見える通常テキストを書き換える可能性がある |
+| `render-expand-collapsed-pipe-tables` | 1 行に潰れた典型的な pipe table を復元する | pipe を多く含む通常文を table と誤認する可能性がある |
+| `render-trim-sparse-table-spacing` | Markdown table 行間の空行を除去する | table 風テキスト周辺の意図した空行を潰す可能性がある |
+| `render-separate-table-boundaries` | GFM が安定して読めるよう table 前後へ空行を入れる | table 風テキストを独立ブロック化する可能性がある |
+
 ## インストール手順
 
 ローカル開発時は Chrome の unpacked extension として読み込みます。

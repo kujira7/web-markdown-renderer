@@ -19,6 +19,34 @@ Japanese README: [README.ja.md](./README.ja.md)
 - Opens as a side panel and can expand to a full-page overlay.
 - Runs locally in the browser and does not post, edit, sync, or write back to any service.
 
+## Normalization Rules
+
+This extension uses heuristic normalization rules before rendering. It is not a strict Markdown parser.
+
+Code is the source of truth for the rule registry. The current rules are grouped by phase below.
+
+### Source Normalization
+
+| ID | Purpose | Main Risk |
+| --- | --- | --- |
+| `source-normalize-whitespace` | Normalize copied whitespace artifacts before block-level transforms. | Leading indentation that carries meaning can be removed. |
+| `source-split-collapsed-markdown-blocks` | Split collapsed headings and fenced code markers onto separate lines. | Non-Markdown text that resembles headings can be split. |
+| `source-expand-collapsed-mermaid-lines` | Split collapsed Mermaid `end` statements inside fenced Mermaid blocks. | Mermaid text that intentionally keeps spacing on one line can be rewritten. |
+| `source-separate-prefixed-table-headers` | Separate prose prefixes from pipe-table header rows. | Prose containing many pipes can be mistaken for a table header. |
+| `source-trim-compact-list-and-quote-spacing` | Remove extra blank lines inside compact lists and blockquotes. | Intentional spacing inside lists or blockquotes can be compacted. |
+| `source-collapse-excess-blank-lines` | Collapse repeated blank lines and trim the final normalized source. | Significant leading or trailing blank lines are dropped. |
+
+### Render Normalization
+
+| ID | Purpose | Main Risk |
+| --- | --- | --- |
+| `render-normalize-line-endings` | Normalize line endings before rendering transforms. | No material user-visible risk expected. |
+| `render-convert-yaml-front-matter` | Convert supported leading YAML front matter into a metadata table. | Unsupported or ambiguous front matter stays as Markdown text. |
+| `render-normalize-slack-links` | Convert Slack-style angle-bracket links into standard Markdown links. | Angle-bracket text that looks like a Slack link can be rewritten. |
+| `render-expand-collapsed-pipe-tables` | Restore common one-line collapsed pipe tables. | Pipe-heavy prose can be mistaken for a table. |
+| `render-trim-sparse-table-spacing` | Remove blank lines between Markdown table rows. | Intentional spacing around table-like text can be collapsed. |
+| `render-separate-table-boundaries` | Insert blank lines around Markdown tables for stable GFM parsing. | Table-looking text can be separated into its own block. |
+
 ## Installation
 
 For local development, install it as an unpacked extension.

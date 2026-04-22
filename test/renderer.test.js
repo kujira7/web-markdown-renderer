@@ -1,11 +1,21 @@
 const assert = require("node:assert/strict");
 const {
   renderMarkdown,
+  listNormalizationRules,
   normalizeSlackLinks,
   normalizeCollapsedPipeTables,
   normalizeSparsePipeTables,
   normalizeTableBoundaries
 } = require("../renderer");
+
+assert.deepEqual(listNormalizationRules("render-normalization").map((rule) => rule.id), [
+  "render-normalize-line-endings",
+  "render-convert-yaml-front-matter",
+  "render-normalize-slack-links",
+  "render-expand-collapsed-pipe-tables",
+  "render-trim-sparse-table-spacing",
+  "render-separate-table-boundaries"
+]);
 
 const slackLink = normalizeSlackLinks("See <https://example.com/docs|docs> and <https://example.com>");
 assert.equal(slackLink, "See [docs](https://example.com/docs) and https://example.com");

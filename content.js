@@ -7,6 +7,8 @@
   }
 
   const ROOT_ID = "web-markdown-renderer-root";
+  const normalizationRules = root.MarkdownNormalizationRules || loadNormalizationRulesForNode();
+  const sourceNormalizationRules = normalizationRules?.SOURCE_NORMALIZATION_RULES || [];
 
   if (typeof chrome !== "undefined" && chrome.runtime && typeof document !== "undefined") {
     chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
@@ -119,18 +121,25 @@
   }
 
   function normalizeSourceText(text) {
-    return normalizeMarkdownBlockSpacing(
-      normalizePrefixedPipeTableHeaders(
-        normalizeMermaidBlockSpacing(
-          normalizeMarkdownBlockBoundaries(
-            String(text || "")
-            .replace(/\u00a0/g, " ")
-            .replace(/[ \t]+\n/g, "\n")
-            .replace(/\n[ \t]+/g, "\n")
-          )
-        )
-      )
-    )
+    return normalizationRules.applyNormalizationRules(String(text || ""), sourceNormalizationRules, {
+      normalizeSourceWhitespace,
+      normalizeMarkdownBlockBoundaries,
+      normalizeMermaidBlockSpacing,
+      normalizePrefixedPipeTableHeaders,
+      normalizeMarkdownBlockSpacing,
+      finalizeSourceText
+    });
+  }
+
+  function normalizeSourceWhitespace(text) {
+    return String(text || "")
+      .replace(/\u00a0/g, " ")
+      .replace(/[ \t]+\n/g, "\n")
+      .replace(/\n[ \t]+/g, "\n");
+  }
+
+  function finalizeSourceText(text) {
+    return String(text || "")
       .replace(/\n{3,}/g, "\n\n")
       .trim();
   }
@@ -481,7 +490,21 @@
     }
   }
 
-  const api = { chooseSourceText, normalizeMarkdownBlockSpacing, normalizeSourceText };
+  function loadNormalizationRulesForNode() {
+    if (typeof require !== "function") return null;
+    try {
+      return require("./normalization-rules");
+    } catch (_error) {
+      return null;
+    }
+  }
+
+  const api = {
+    chooseSourceText,
+    listNormalizationRules: normalizationRules.listNormalizationRules,
+    normalizeMarkdownBlockSpacing,
+    normalizeSourceText
+  };
 
   if (typeof module !== "undefined" && module.exports) {
     module.exports = api;
