@@ -160,6 +160,30 @@ body`);
 assert.match(foldedFrontMatter, /<th>description<\/th>\s*<td>first line second line<\/td>/);
 assert.match(foldedFrontMatter, /<th>tags<\/th>\s*<td>alpha<br>\s*beta<\/td>/);
 
+const deindentedBlockFrontMatter = renderMarkdown(`---
+name: tenant-provisioning-resources
+description: |
+tenant_provisioning スクリプト（databricks-infra-asset）が作成する全リソースのリファレンス。
+---
+`);
+assert.match(deindentedBlockFrontMatter, /<table>/);
+assert.match(deindentedBlockFrontMatter, /<th>name<\/th>\s*<td>tenant-provisioning-resources<\/td>/);
+assert.match(
+  deindentedBlockFrontMatter,
+  /<th>description<\/th>\s*<td>tenant_provisioning スクリプト（databricks-infra-asset）が作成する全リソースのリファレンス。<\/td>/
+);
+
+const deindentedFoldedFrontMatter = renderMarkdown(`---
+name: example
+description: >
+first line
+second line
+tags: alpha
+---
+body`);
+assert.match(deindentedFoldedFrontMatter, /<th>description<\/th>\s*<td>first line second line<\/td>/);
+assert.match(deindentedFoldedFrontMatter, /<th>tags<\/th>\s*<td>alpha<\/td>/);
+
 const invalidFrontMatter = renderMarkdown(`---
 name:
   nested: value

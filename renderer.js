@@ -95,7 +95,7 @@
     }
 
     if (/^[>|][+-]?\d*$/.test(trimmed)) {
-      const block = collectIndentedBlock(lines, startIndex);
+      const block = collectYamlScalarBlock(lines, startIndex);
       if (!block) return null;
       return {
         value: trimmed[0] === ">" ? foldYamlBlock(block.lines) : joinYamlBlock(block.lines),
@@ -133,6 +133,30 @@
 
     if (baseIndent === null) return null;
     return { lines: blockLines, nextIndex };
+  }
+
+  function collectYamlScalarBlock(lines, startIndex) {
+    return collectIndentedBlock(lines, startIndex) || collectRelaxedYamlScalarBlock(lines, startIndex);
+  }
+
+  function collectRelaxedYamlScalarBlock(lines, startIndex) {
+    const blockLines = [];
+    let nextIndex = startIndex;
+
+    for (; nextIndex < lines.length; nextIndex += 1) {
+      const line = lines[nextIndex];
+
+      if (isTopLevelYamlKey(line)) break;
+      if (line.trim() === "" && blockLines.length === 0) continue;
+
+      blockLines.push(line);
+    }
+
+    return blockLines.length > 0 ? { lines: blockLines, nextIndex } : null;
+  }
+
+  function isTopLevelYamlKey(line) {
+    return typeof line === "string" && /^[A-Za-z0-9_-]+:(?:\s|$)/.test(line);
   }
 
   function parseYamlArrayBlock(lines) {
