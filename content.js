@@ -21,7 +21,7 @@
         return;
       }
       if (message?.type !== "MARKDOWN_RENDERER_OPEN") return;
-      const text = message.text || getSelectedText();
+      const text = chooseOpenText(getSelectedText(), message.text);
       if (!text.trim()) return;
       openViewer(text);
     });
@@ -45,6 +45,10 @@
     const restored = normalizeSourceText(fragments.join("\n"));
     const nativeText = normalizeSourceText(String(selection || ""));
     return chooseSourceText(restored, nativeText);
+  }
+
+  function chooseOpenText(selectedText, fallbackText) {
+    return selectedText || fallbackText || "";
   }
 
   function extractRangeText(range) {
@@ -447,6 +451,7 @@
   }
 
   const api = {
+    chooseOpenText,
     chooseSourceText,
     listNormalizationRules: normalizationRules.listNormalizationRules,
     normalizeSourceText,
