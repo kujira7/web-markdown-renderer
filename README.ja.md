@@ -178,6 +178,7 @@ ZIP でダウンロードした場合:
 
 ```sh
 npm install
+pre-commit install
 npm test
 ```
 
