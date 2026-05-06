@@ -99,6 +99,8 @@ Important: select the directory that contains `manifest.json`.
 
 The selected text opens in a readable Markdown viewer.
 
+Google Docs note: use the right-click `Render as Markdown` action. Google Docs does not always expose its editor selection through the normal page selection API, so the keyboard shortcut and extension icon may not read the selected document text there.
+
 ### Full-Page View
 
 1. Open the viewer.

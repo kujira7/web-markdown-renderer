@@ -98,6 +98,8 @@ git clone https://github.com/kujira7/web-markdown-renderer.git
 
 選択したテキストが読みやすい Markdown viewer で表示されます。
 
+Google Docs では、右クリックの `Render as Markdown` を使ってください。Google Docs は editor の選択範囲を通常のページ selection API として常に公開するわけではないため、ショートカットや拡張アイコンでは選択した本文を読めない場合があります。
+
 ### 全画面表示
 
 1. viewer を開く
