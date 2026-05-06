@@ -131,7 +131,6 @@
       normalizeMarkdownBlockBoundaries,
       normalizeMermaidBlockSpacing,
       normalizePrefixedPipeTableHeaders,
-      normalizeMarkdownBlockSpacing,
       finalizeSourceText
     });
   }
@@ -139,14 +138,14 @@
   function normalizeSourceWhitespace(text) {
     return String(text || "")
       .replace(/\u00a0/g, " ")
-      .replace(/[ \t]+\n/g, "\n")
-      .replace(/\n[ \t]+/g, "\n");
+      .replace(/[ \t]+\n/g, "\n");
   }
 
   function finalizeSourceText(text) {
     return String(text || "")
       .replace(/\n{3,}/g, "\n\n")
-      .trim();
+      .replace(/^\n+/, "")
+      .replace(/\n+$/, "");
   }
 
   function chooseSourceText(restored, nativeText) {
@@ -304,63 +303,6 @@
     return pipeIndexes[pipeIndexes.length - requiredPipes];
   }
 
-  function normalizeMarkdownBlockSpacing(text) {
-    const lines = String(text || "").split("\n");
-    const output = [];
-    let inFence = false;
-    let fenceMarker = "";
-
-    for (let index = 0; index < lines.length; index += 1) {
-      const line = lines[index];
-      const fence = line.match(/^\s*(```+|~~~+)/);
-
-      if (fence && !inFence) {
-        inFence = true;
-        fenceMarker = fence[1][0];
-      } else if (fence && inFence && fence[1][0] === fenceMarker) {
-        inFence = false;
-        fenceMarker = "";
-      }
-
-      if (!inFence && line.trim() === "" && isBetweenCompactMarkdownLines(lines, index)) {
-        continue;
-      }
-
-      output.push(line);
-    }
-
-    return output.join("\n");
-  }
-
-  function isBetweenCompactMarkdownLines(lines, index) {
-    const previous = findPreviousNonEmptyLine(lines, index);
-    const next = findNextNonEmptyLine(lines, index);
-    if (!previous || !next) return false;
-    return (isListLine(previous) && isListLine(next)) || (isBlockquoteLine(previous) && isBlockquoteLine(next));
-  }
-
-  function findPreviousNonEmptyLine(lines, index) {
-    for (let cursor = index - 1; cursor >= 0; cursor -= 1) {
-      if (lines[cursor].trim() !== "") return lines[cursor];
-    }
-    return "";
-  }
-
-  function findNextNonEmptyLine(lines, index) {
-    for (let cursor = index + 1; cursor < lines.length; cursor += 1) {
-      if (lines[cursor].trim() !== "") return lines[cursor];
-    }
-    return "";
-  }
-
-  function isListLine(line) {
-    return /^\s*(?:[-*+]\s+|\d+[.)]\s+)/.test(line);
-  }
-
-  function isBlockquoteLine(line) {
-    return /^\s*>\s?/.test(line);
-  }
-
   function openViewer(text) {
     closeViewer();
 
@@ -507,7 +449,6 @@
   const api = {
     chooseSourceText,
     listNormalizationRules: normalizationRules.listNormalizationRules,
-    normalizeMarkdownBlockSpacing,
     normalizeSourceText,
     textFromNode
   };

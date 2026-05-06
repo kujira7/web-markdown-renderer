@@ -13,7 +13,6 @@ English README: [README.md](./README.md)
 - 前後の文章や見出しに密着した Markdown table を分離して表示する
 - 1行に潰れた一般的な pipe table を Markdown table に復元する
 - Markdown table の各行間に入った余分な空行を取り除く
-- list item や blockquote 行の間に入った余分な空行を取り除く
 - Slack 風リンクを最小限だけ読みやすく正規化する
   - `<https://example.com|label>` を label 付きリンクとして表示
   - `<https://example.com>` を通常リンクとして表示
@@ -30,12 +29,11 @@ English README: [README.md](./README.md)
 
 | ID | 目的 | 主なリスク |
 | --- | --- | --- |
-| `source-normalize-whitespace` | コピー由来の空白崩れを後続変換の前に正規化する | 意味のある行頭インデントを落とす可能性がある |
+| `source-normalize-whitespace` | コピー由来の NBSP と行末空白を後続変換の前に正規化する | 実質的な意味変更は想定しにくい |
 | `source-split-collapsed-markdown-blocks` | 潰れた見出しや fenced code marker を別行へ分離する | 見出し風の非 Markdown テキストを分割する可能性がある |
 | `source-expand-collapsed-mermaid-lines` | fenced Mermaid 内で潰れた `end` 文を分離する | 1 行維持を意図した Mermaid テキストを書き換える可能性がある |
 | `source-separate-prefixed-table-headers` | pipe table header に密着した前置きテキストを分離する | pipe を多く含む通常文を table header と誤認する可能性がある |
-| `source-trim-compact-list-and-quote-spacing` | compact list と blockquote 内の余分な空行を除去する | 意図した空行を詰める可能性がある |
-| `source-collapse-excess-blank-lines` | 連続空行を潰し末尾を trim する | 先頭末尾の空行が失われる |
+| `source-collapse-excess-blank-lines` | 連続空行を潰し、先頭末尾の空行だけを落とす | 先頭末尾の空行が失われる |
 
 ### Render Normalization
 
@@ -43,8 +41,8 @@ English README: [README.md](./README.md)
 | --- | --- | --- |
 | `render-normalize-line-endings` | 描画前に改行コードを LF に統一する | 実質的なユーザー影響は想定しない |
 | `render-convert-yaml-front-matter` | 対応可能な先頭 YAML front matter をメタデータ表へ変換する | 非対応や曖昧な front matter はそのまま本文表示になる |
-| `render-normalize-slack-links` | Slack 風 angle bracket link を標準 Markdown link に変換する | Slack 風に見える通常テキストを書き換える可能性がある |
-| `render-expand-collapsed-pipe-tables` | 1 行に潰れた典型的な pipe table を復元する | pipe を多く含む通常文を table と誤認する可能性がある |
+| `render-normalize-slack-links` | fenced / inline code の外側で Slack 風 angle bracket link を標準 Markdown link に変換する | Slack 風に見える通常テキストを書き換える可能性がある |
+| `render-expand-collapsed-pipe-tables` | fenced / inline code の外側で 1 行に潰れた典型的な pipe table を復元する | pipe を多く含む通常文を table と誤認する可能性がある |
 | `render-trim-sparse-table-spacing` | Markdown table 行間の空行を除去する | table 風テキスト周辺の意図した空行を潰す可能性がある |
 | `render-separate-table-boundaries` | GFM が安定して読めるよう table 前後へ空行を入れる | table 風テキストを独立ブロック化する可能性がある |
 
