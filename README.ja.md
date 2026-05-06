@@ -98,7 +98,7 @@ git clone https://github.com/kujira7/web-markdown-renderer.git
 
 選択したテキストが読みやすい Markdown viewer で表示されます。
 
-Google Docs など、ブラウザ拡張が選択テキストを直接取得できないページでは、viewer に貼り付けて表示します。
+Google Docs など、ブラウザ拡張が選択テキストを直接取得できないページや右クリックメニューが表示されないページでは、viewer に貼り付けて表示します。
 
 1. 対象テキストをコピーする
 2. 拡張アイコンまたはショートカットで viewer を開く

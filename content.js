@@ -379,6 +379,9 @@
     pasteBox.className = "umr-paste-box";
     pasteBox.placeholder = "Paste Markdown here";
     pasteBox.value = viewerState.sourceText;
+    pasteBox.autocomplete = "off";
+    pasteBox.autocapitalize = "off";
+    pasteBox.spellcheck = false;
     pasteBox.setAttribute("aria-label", "Markdown source");
     const rendered = document.createElement("div");
     rendered.className = "markdown-body";
