@@ -1,5 +1,5 @@
 const assert = require("node:assert/strict");
-const { chooseSourceText, listNormalizationRules, normalizeSourceText, textFromNode } = require("../content");
+const { chooseOpenText, chooseSourceText, listNormalizationRules, normalizeSourceText, textFromNode } = require("../content");
 
 const ELEMENT_NODE = 1;
 const TEXT_NODE = 3;
@@ -36,6 +36,10 @@ assert.deepEqual(listNormalizationRules("source-normalization").map((rule) => ru
   "source-separate-prefixed-table-headers",
   "source-collapse-excess-blank-lines"
 ]);
+
+assert.equal(chooseOpenText("restored table", "plain selection"), "restored table");
+assert.equal(chooseOpenText("", "plain selection"), "plain selection");
+assert.equal(chooseOpenText("", ""), "");
 
 const wellFormedMarkdown = `### B. パイプライン同時実行テスト
 

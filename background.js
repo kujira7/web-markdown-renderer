@@ -10,7 +10,7 @@ chrome.runtime.onInstalled.addListener(() => {
 
 chrome.contextMenus.onClicked.addListener((info, tab) => {
   if (info.menuItemId !== MENU_ID || !tab?.id) return;
-  openRenderer(tab.id).catch((error) => logOpenFailure(error));
+  openRenderer(tab.id, info.selectionText || "").catch((error) => logOpenFailure(error));
 });
 
 chrome.action.onClicked.addListener((tab) => {
