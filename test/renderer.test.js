@@ -239,4 +239,20 @@ bbb
 ---`);
 assert.match(frontMatterWithSetextBody, /<\/table>\s*<h2>bbb<\/h2>/);
 
+const nestedLists = renderMarkdown(`- 箇条書き
+- 箇条書き
+  - ネストも掘れるよ
+  - ネストも掘れるよ
+  - ネストも掘れるよ
+- 箇条書き
+
+1. 箇条書き
+2. 箇条書き
+   1. ネストも掘れるよ
+   2. ネストも掘れるよ
+   3. ネストも掘れるよ
+3. 箇条書き`);
+assert.match(nestedLists, /<ul>\s*<li>箇条書き<\/li>\s*<li>箇条書き<ul>/);
+assert.match(nestedLists, /<ol>\s*<li>箇条書き<\/li>\s*<li>箇条書き<ol>/);
+
 console.log("renderer tests passed");
