@@ -38,4 +38,14 @@ assertRule("#web-markdown-renderer-root .markdown-body li:has(> input[type=\"che
   { property: "list-style-type", value: "none" }
 ]);
 
+assertRule("#web-markdown-renderer-root .umr-paste-box", [
+  { property: "display", value: "none" },
+  { property: "resize", value: "vertical" },
+  { property: "width", value: "100%" }
+]);
+
+assertRule("#web-markdown-renderer-root.umr-paste-mode .umr-paste-box", [
+  { property: "display", value: "block" }
+]);
+
 console.log("viewer css tests passed");

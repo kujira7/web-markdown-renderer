@@ -20,9 +20,8 @@
         sendResponse({ ok: true });
         return;
       }
-      if (message?.type !== "MARKDOWN_RENDERER_OPEN") return;
+      if (!shouldOpenViewer(message)) return;
       const text = chooseOpenText(getSelectedText(), message.text);
-      if (!text.trim()) return;
       openViewer(text);
     });
 
@@ -49,6 +48,21 @@
 
   function chooseOpenText(selectedText, fallbackText) {
     return selectedText || fallbackText || "";
+  }
+
+  function shouldOpenViewer(message) {
+    return message?.type === "MARKDOWN_RENDERER_OPEN";
+  }
+
+  function buildViewerState(text, renderMarkdown) {
+    const sourceText = String(text || "");
+    const isPasteMode = sourceText.trim() === "";
+    return {
+      sourceText,
+      charCount: sourceText.length,
+      isPasteMode,
+      renderedHtml: isPasteMode ? "" : renderMarkdown(sourceText)
+    };
   }
 
   function extractRangeText(range) {
@@ -309,9 +323,12 @@
 
   function openViewer(text) {
     closeViewer();
+    let viewerState = buildViewerState(text, window.MarkdownRenderer.renderMarkdown);
+    const isPasteMode = viewerState.isPasteMode;
 
     const root = document.createElement("div");
     root.id = ROOT_ID;
+    root.classList.toggle("umr-paste-mode", isPasteMode);
 
     const backdrop = document.createElement("div");
     backdrop.className = "umr-backdrop";
@@ -333,7 +350,7 @@
     title.textContent = "Markdown Renderer";
     const subtitle = document.createElement("div");
     subtitle.className = "umr-subtitle";
-    subtitle.textContent = `${text.length.toLocaleString()} chars`;
+    subtitle.textContent = formatCharCount(viewerState.charCount);
     titleGroup.append(title, subtitle);
 
     const actions = document.createElement("div");
@@ -357,20 +374,28 @@
     header.append(titleGroup, actions);
 
     const main = document.createElement("main");
-    main.className = "umr-content markdown-body";
-    main.innerHTML = window.MarkdownRenderer.renderMarkdown(text);
+    main.className = "umr-content";
+    const pasteBox = document.createElement("textarea");
+    pasteBox.className = "umr-paste-box";
+    pasteBox.placeholder = "Paste Markdown here";
+    pasteBox.value = viewerState.sourceText;
+    pasteBox.setAttribute("aria-label", "Markdown source");
+    const rendered = document.createElement("div");
+    rendered.className = "markdown-body";
+    rendered.innerHTML = viewerState.renderedHtml;
+    main.append(pasteBox, rendered);
 
     const source = document.createElement("details");
     source.className = "umr-source";
     const summary = document.createElement("summary");
     summary.textContent = "Source";
     const pre = document.createElement("pre");
-    pre.textContent = text;
+    pre.textContent = viewerState.sourceText;
     source.append(summary, pre);
 
     copyButton.addEventListener("click", async () => {
       try {
-        await navigator.clipboard.writeText(text);
+        await navigator.clipboard.writeText(viewerState.sourceText);
         copyButton.textContent = "Copied";
       } catch (_error) {
         copyButton.textContent = "Copy failed";
@@ -386,12 +411,25 @@
       expandButton.textContent = isExpanded ? "Side panel" : "Full page";
     });
 
+    pasteBox.addEventListener("input", () => {
+      viewerState = buildViewerState(pasteBox.value, window.MarkdownRenderer.renderMarkdown);
+      subtitle.textContent = formatCharCount(viewerState.charCount);
+      rendered.innerHTML = viewerState.renderedHtml;
+      pre.textContent = viewerState.sourceText;
+      renderMermaidDiagrams(rendered);
+    });
+
     panel.append(header, main, source);
     root.append(backdrop, panel);
 
     document.documentElement.appendChild(root);
     panel.focus();
-    renderMermaidDiagrams(main);
+    renderMermaidDiagrams(rendered);
+    if (isPasteMode) pasteBox.focus();
+  }
+
+  function formatCharCount(charCount) {
+    return `${charCount.toLocaleString()} chars`;
   }
 
   function closeViewer() {
@@ -451,10 +489,12 @@
   }
 
   const api = {
+    buildViewerState,
     chooseOpenText,
     chooseSourceText,
     listNormalizationRules: normalizationRules.listNormalizationRules,
     normalizeSourceText,
+    shouldOpenViewer,
     textFromNode
   };
 

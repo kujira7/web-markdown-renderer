@@ -1,5 +1,13 @@
 const assert = require("node:assert/strict");
-const { chooseOpenText, chooseSourceText, listNormalizationRules, normalizeSourceText, textFromNode } = require("../content");
+const {
+  buildViewerState,
+  chooseOpenText,
+  chooseSourceText,
+  listNormalizationRules,
+  normalizeSourceText,
+  shouldOpenViewer,
+  textFromNode
+} = require("../content");
 
 const ELEMENT_NODE = 1;
 const TEXT_NODE = 3;
@@ -40,6 +48,20 @@ assert.deepEqual(listNormalizationRules("source-normalization").map((rule) => ru
 assert.equal(chooseOpenText("restored table", "plain selection"), "restored table");
 assert.equal(chooseOpenText("", "plain selection"), "plain selection");
 assert.equal(chooseOpenText("", ""), "");
+assert.equal(shouldOpenViewer({ type: "MARKDOWN_RENDERER_OPEN" }), true);
+assert.equal(shouldOpenViewer({ type: "MARKDOWN_RENDERER_PING" }), false);
+
+const emptyViewer = buildViewerState("", (source) => `<p>${source}</p>`);
+assert.equal(emptyViewer.sourceText, "");
+assert.equal(emptyViewer.charCount, 0);
+assert.equal(emptyViewer.isPasteMode, true);
+assert.equal(emptyViewer.renderedHtml, "");
+
+const pastedViewer = buildViewerState("# pasted", (source) => `<h1>${source.slice(2)}</h1>`);
+assert.equal(pastedViewer.sourceText, "# pasted");
+assert.equal(pastedViewer.charCount, 8);
+assert.equal(pastedViewer.isPasteMode, false);
+assert.equal(pastedViewer.renderedHtml, "<h1>pasted</h1>");
 
 const wellFormedMarkdown = `### B. パイプライン同時実行テスト
 

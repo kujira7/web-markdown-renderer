@@ -112,6 +112,24 @@
   padding: 24px 32px 36px;
 }
 
+#web-markdown-renderer-root .umr-paste-box {
+  border: 1px solid #b8bec4;
+  border-radius: 6px;
+  box-sizing: border-box;
+  color: #202124;
+  display: none;
+  font: 14px/1.5 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  margin: 0 0 20px;
+  min-height: 180px;
+  padding: 12px;
+  resize: vertical;
+  width: 100%;
+}
+
+#web-markdown-renderer-root.umr-paste-mode .umr-paste-box {
+  display: block;
+}
+
 #web-markdown-renderer-root .markdown-body {
   color: #1f2328;
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans", Helvetica, Arial, sans-serif;
