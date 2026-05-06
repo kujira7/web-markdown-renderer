@@ -179,6 +179,7 @@ The extension does not request host permissions such as `<all_urls>`, does not r
 
 ```sh
 npm install
+pre-commit install
 npm test
 ```
 
