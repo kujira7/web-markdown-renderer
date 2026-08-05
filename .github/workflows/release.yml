@@ -1,0 +1,104 @@
+name: Release
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Require main branch
+        run: |
+          if [[ "$GITHUB_REF" != "refs/heads/main" ]]; then
+            echo "Release workflow must run from main, got: $GITHUB_REF" >&2
+            exit 1
+          fi
+
+      - name: Check out repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Set up Node.js
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Resolve and verify release version
+        id: release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          version="$(node -p "require('./package.json').version")"
+          tag="v${version}"
+
+          if git ls-remote --exit-code --tags origin "refs/tags/${tag}" >/dev/null 2>&1; then
+            echo "Tag already exists: ${tag}" >&2
+            exit 1
+          fi
+
+          if gh release view "$tag" >/dev/null 2>&1; then
+            echo "Release already exists: ${tag}" >&2
+            exit 1
+          fi
+
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          echo "tag=$tag" >> "$GITHUB_OUTPUT"
+
+      - name: Run tests and build store package
+        run: npm test
+
+      - name: Create checksum
+        id: assets
+        env:
+          VERSION: ${{ steps.release.outputs.version }}
+        run: |
+          zip_name="web-markdown-renderer-${VERSION}.zip"
+          (
+            cd dist
+            sha256sum "$zip_name" > "${zip_name}.sha256"
+          )
+          echo "zip_path=dist/${zip_name}" >> "$GITHUB_OUTPUT"
+          echo "checksum_path=dist/${zip_name}.sha256" >> "$GITHUB_OUTPUT"
+
+      - name: Create draft GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ steps.release.outputs.tag }}
+          ZIP_PATH: ${{ steps.assets.outputs.zip_path }}
+          CHECKSUM_PATH: ${{ steps.assets.outputs.checksum_path }}
+        run: |
+          gh release create "$TAG" \
+            "${ZIP_PATH}#Chrome Web Store package" \
+            "${CHECKSUM_PATH}#SHA-256 checksum" \
+            --draft \
+            --fail-on-no-commits \
+            --generate-notes \
+            --target "$GITHUB_SHA" \
+            --title "$TAG"
+
+      - name: Publish GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ steps.release.outputs.tag }}
+        run: gh release edit "$TAG" --draft=false --latest
+
+      - name: Record manual Chrome Web Store step
+        env:
+          TAG: ${{ steps.release.outputs.tag }}
+          ZIP_PATH: ${{ steps.assets.outputs.zip_path }}
+        run: |
+          {
+            echo "### Published ${TAG}"
+            echo
+            echo "Upload \`${ZIP_PATH}\` manually from this GitHub Release to Chrome Developer Dashboard."
+          } >> "$GITHUB_STEP_SUMMARY"
