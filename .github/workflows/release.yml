@@ -1,0 +1,84 @@
+name: Release
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
+  pull-requests: write
+  issues: read
+
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Set up Node.js
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run tests and build store package
+        run: npm test
+
+      - name: Prepare or publish release
+        id: tagpr
+        uses: Songmu/tagpr@d1b8138b7a31075141b6cd64103de9485ced7ac9 # v1.20.1
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+
+      - name: Create checksum
+        if: steps.tagpr.outputs.tag != ''
+        env:
+          TAG: ${{ steps.tagpr.outputs.tag }}
+        run: |
+          version="${TAG#v}"
+          zip_name="web-markdown-renderer-${version}.zip"
+          (
+            cd dist
+            sha256sum "$zip_name" > "${zip_name}.sha256"
+          )
+
+      - name: Upload release assets
+        if: steps.tagpr.outputs.tag != ''
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ steps.tagpr.outputs.tag }}
+        run: |
+          version="${TAG#v}"
+          zip_path="dist/web-markdown-renderer-${version}.zip"
+          gh release upload "$TAG" \
+            "${zip_path}#Chrome Web Store package" \
+            "${zip_path}.sha256#SHA-256 checksum"
+
+      - name: Publish GitHub Release
+        if: steps.tagpr.outputs.tag != ''
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ steps.tagpr.outputs.tag }}
+        run: gh release edit "$TAG" --draft=false --latest
+
+      - name: Record manual Chrome Web Store step
+        if: steps.tagpr.outputs.tag != ''
+        env:
+          TAG: ${{ steps.tagpr.outputs.tag }}
+        run: |
+          version="${TAG#v}"
+          {
+            echo "### Published ${TAG}"
+            echo
+            echo "Upload \`dist/web-markdown-renderer-${version}.zip\` manually from this GitHub Release to Chrome Developer Dashboard."
+          } >> "$GITHUB_STEP_SUMMARY"

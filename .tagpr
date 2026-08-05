@@ -1,0 +1,6 @@
+[tagpr]
+	releaseBranch = main
+	versionFile = package.json, manifest.json
+	vPrefix = true
+	release = draft
+	postVersionCommand = npm install --package-lock-only --ignore-scripts
