@@ -1,10 +1,13 @@
 name: Release
 
 on:
-  workflow_dispatch:
+  push:
+    branches: [main]
 
 permissions:
   contents: write
+  pull-requests: write
+  issues: read
 
 concurrency:
   group: release
@@ -14,15 +17,10 @@ jobs:
   release:
     runs-on: ubuntu-latest
     steps:
-      - name: Require main branch
-        run: |
-          if [[ "$GITHUB_REF" != "refs/heads/main" ]]; then
-            echo "Release workflow must run from main, got: $GITHUB_REF" >&2
-            exit 1
-          fi
-
       - name: Check out repository
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
 
       - name: Set up Node.js
         uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
@@ -33,72 +31,54 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Resolve and verify release version
-        id: release
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: |
-          version="$(node -p "require('./package.json').version")"
-          tag="v${version}"
-
-          if git ls-remote --exit-code --tags origin "refs/tags/${tag}" >/dev/null 2>&1; then
-            echo "Tag already exists: ${tag}" >&2
-            exit 1
-          fi
-
-          if gh release view "$tag" >/dev/null 2>&1; then
-            echo "Release already exists: ${tag}" >&2
-            exit 1
-          fi
-
-          echo "version=$version" >> "$GITHUB_OUTPUT"
-          echo "tag=$tag" >> "$GITHUB_OUTPUT"
-
       - name: Run tests and build store package
         run: npm test
 
-      - name: Create checksum
-        id: assets
+      - name: Prepare or publish release
+        id: tagpr
+        uses: Songmu/tagpr@d1b8138b7a31075141b6cd64103de9485ced7ac9 # v1.20.1
         env:
-          VERSION: ${{ steps.release.outputs.version }}
+          GITHUB_TOKEN: ${{ github.token }}
+
+      - name: Create checksum
+        if: steps.tagpr.outputs.tag != ''
+        env:
+          TAG: ${{ steps.tagpr.outputs.tag }}
         run: |
-          zip_name="web-markdown-renderer-${VERSION}.zip"
+          version="${TAG#v}"
+          zip_name="web-markdown-renderer-${version}.zip"
           (
             cd dist
             sha256sum "$zip_name" > "${zip_name}.sha256"
           )
-          echo "zip_path=dist/${zip_name}" >> "$GITHUB_OUTPUT"
-          echo "checksum_path=dist/${zip_name}.sha256" >> "$GITHUB_OUTPUT"
 
-      - name: Create draft GitHub Release
+      - name: Upload release assets
+        if: steps.tagpr.outputs.tag != ''
         env:
           GH_TOKEN: ${{ github.token }}
-          TAG: ${{ steps.release.outputs.tag }}
-          ZIP_PATH: ${{ steps.assets.outputs.zip_path }}
-          CHECKSUM_PATH: ${{ steps.assets.outputs.checksum_path }}
+          TAG: ${{ steps.tagpr.outputs.tag }}
         run: |
-          gh release create "$TAG" \
-            "${ZIP_PATH}#Chrome Web Store package" \
-            "${CHECKSUM_PATH}#SHA-256 checksum" \
-            --draft \
-            --fail-on-no-commits \
-            --generate-notes \
-            --target "$GITHUB_SHA" \
-            --title "$TAG"
+          version="${TAG#v}"
+          zip_path="dist/web-markdown-renderer-${version}.zip"
+          gh release upload "$TAG" \
+            "${zip_path}#Chrome Web Store package" \
+            "${zip_path}.sha256#SHA-256 checksum"
 
       - name: Publish GitHub Release
+        if: steps.tagpr.outputs.tag != ''
         env:
           GH_TOKEN: ${{ github.token }}
-          TAG: ${{ steps.release.outputs.tag }}
+          TAG: ${{ steps.tagpr.outputs.tag }}
         run: gh release edit "$TAG" --draft=false --latest
 
       - name: Record manual Chrome Web Store step
+        if: steps.tagpr.outputs.tag != ''
         env:
-          TAG: ${{ steps.release.outputs.tag }}
-          ZIP_PATH: ${{ steps.assets.outputs.zip_path }}
+          TAG: ${{ steps.tagpr.outputs.tag }}
         run: |
+          version="${TAG#v}"
           {
             echo "### Published ${TAG}"
             echo
-            echo "Upload \`${ZIP_PATH}\` manually from this GitHub Release to Chrome Developer Dashboard."
+            echo "Upload \`dist/web-markdown-renderer-${version}.zip\` manually from this GitHub Release to Chrome Developer Dashboard."
           } >> "$GITHUB_STEP_SUMMARY"

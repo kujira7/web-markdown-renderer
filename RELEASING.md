@@ -1,11 +1,11 @@
 # Release process
 
-GitHub Actions creates the version tag and GitHub Release. Upload to Chrome Web Store and review submission remain manual.
+tagpr maintains a release pull request. Merging that pull request creates the version tag and publishes a GitHub Release containing the Chrome Web Store package. Upload to Chrome Web Store and review submission remain manual.
 
 ## Branch and version policy
 
 - Keep `main` releasable. Use short-lived `feat/*`, `fix/*`, or `chore/*` branches and squash merge pull requests after CI passes.
-- Do not create `develop`, release, hotfix, or moving major/minor tag branches.
+- Do not maintain `develop`, release, hotfix, or moving major/minor tag branches. The `tagpr-from-*` branch is created and updated by tagpr for its release pull request.
 - Use `X.Y.Z` versions and `vX.Y.Z` tags.
   - Increment minor for a backward-compatible feature.
   - Increment patch for a backward-compatible fix.
@@ -16,16 +16,21 @@ GitHub Actions creates the version tag and GitHub Release. Upload to Chrome Web 
 ## Prepare a release
 
 1. Merge the intended changes to `main`. Do not include unrelated open pull requests.
-2. For a new version, update `manifest.json`, `package.json`, and `package-lock.json` in a release preparation pull request.
-3. Confirm the `test` check passes on the merged commit.
-4. Open **Actions > Release > Run workflow**, select `main`, and run it.
+2. Open the pull request labeled `tagpr`. It is created or updated after each push to `main`.
+3. Select the version when necessary:
+   - Leave both version labels absent for a patch release.
+   - Add `tagpr:minor` for a minor release.
+   - Add `tagpr:major` for a major release.
+4. Confirm the release pull request updates `manifest.json`, `package.json`, `package-lock.json`, and `CHANGELOG.md` as expected.
+5. Approve the GitHub Actions workflow when the release pull request shows **Approve workflows to run**, then confirm the `test` check passes.
+6. Squash merge the release pull request.
 
-The workflow derives the tag and package name from `package.json`, runs `npm test`, and publishes:
+The Release workflow runs `npm test` before tagpr creates a tag. When the merged pull request is the tagpr release pull request, the workflow creates a draft GitHub Release, attaches these files, and then publishes it:
 
 - `web-markdown-renderer-X.Y.Z.zip`
 - `web-markdown-renderer-X.Y.Z.zip.sha256`
 
-If validation fails, no release is created. If the workflow fails after creating the draft Release, inspect and resolve that draft instead of deleting or moving its tag automatically.
+If validation fails before tagpr runs, no tag or release is created. If the workflow fails after tagpr creates the draft Release, inspect and resolve that draft instead of deleting or moving its tag automatically.
 
 ## Verify and submit to Chrome Web Store
 
@@ -37,4 +42,4 @@ If validation fails, no release is created. If the workflow fails after creating
 6. Confirm the uploaded version matches the GitHub Release tag.
 7. Submit the item for review and select automatic publishing after approval.
 
-Chrome Web Store API credentials, Google Cloud OIDC, and GitHub Secrets are not used by this release process.
+Chrome Web Store API credentials, Google Cloud OIDC, personal access tokens, GitHub App credentials, and repository secrets are not used by this release process.
