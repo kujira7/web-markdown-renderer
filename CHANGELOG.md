@@ -1,5 +1,9 @@
 # Changelog
 
+## [v1.1.1](https://github.com/kujira7/web-markdown-renderer/compare/v1.1.0...v1.1.1) - 2026-08-06
+
+- Recalculate tagpr versions on label changes by @kujira7 in https://github.com/kujira7/web-markdown-renderer/pull/11
+
 ## [v1.1.0](https://github.com/kujira7/web-markdown-renderer/commits/v1.1.0) - 2026-08-05
 
 - Harden normalization rules and bump version to 1.1.0 by @kujira7 in https://github.com/kujira7/web-markdown-renderer/pull/1
