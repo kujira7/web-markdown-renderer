@@ -17,13 +17,14 @@ tagpr maintains a release pull request. Merging that pull request creates the ve
 
 1. Merge the intended changes to `main`. Do not include unrelated open pull requests.
 2. Open the pull request labeled `tagpr`. It is created or updated after each push to `main`.
-3. Select the version when necessary:
-   - Leave both version labels absent for a patch release.
-   - Add `tagpr:minor` for a minor release.
-   - Add `tagpr:major` for a major release.
-4. Confirm the release pull request updates `manifest.json`, `package.json`, `package-lock.json`, and `CHANGELOG.md` as expected.
-5. Approve the GitHub Actions workflow when the release pull request shows **Approve workflows to run**, then confirm the `test` check passes.
-6. Squash merge the release pull request.
+3. Select exactly one version increment on the release pull request:
+   - Patch, such as `v1.1.0` to `v1.1.1`: remove both `tagpr:minor` and `tagpr:major`.
+   - Minor, such as `v1.1.0` to `v1.2.0`: add `tagpr:minor` and remove `tagpr:major`.
+   - Major, such as `v1.1.0` to `v2.0.0`: add `tagpr:major` and remove `tagpr:minor`.
+4. Wait for the Release workflow triggered by the label change to update the release pull request.
+5. Confirm the release pull request updates `manifest.json`, `package.json`, `package-lock.json`, and `CHANGELOG.md` as expected.
+6. Approve the GitHub Actions workflow when the release pull request shows **Approve workflows to run**, then confirm the `test` check passes.
+7. Squash merge the release pull request.
 
 The Release workflow runs `npm test` before tagpr creates a tag. When the merged pull request is the tagpr release pull request, the workflow creates a draft GitHub Release, attaches these files, and then publishes it:
 
