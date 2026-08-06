@@ -3,6 +3,8 @@ name: Release
 on:
   push:
     branches: [main]
+  issues:
+    types: [labeled, unlabeled]
 
 permissions:
   contents: write
@@ -15,6 +17,16 @@ concurrency:
 
 jobs:
   release:
+    if: >-
+      github.event_name == 'push' ||
+      (
+        github.event.issue.pull_request &&
+        contains(github.event.issue.labels.*.name, 'tagpr') &&
+        (
+          github.event.label.name == 'tagpr:minor' ||
+          github.event.label.name == 'tagpr:major'
+        )
+      )
     runs-on: ubuntu-latest
     steps:
       - name: Check out repository
